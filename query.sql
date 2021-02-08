@@ -1,7 +1,7 @@
 --
-DROP DATABASE [IF EXISTS] CompanyDatabase;
+-- DROP DATABASE [IF EXISTS] CompanyDatabase;
 
-CREATE DATABASE CompanyDatabase;
+-- CREATE DATABASE CompanyDatabase;
 
 CREATE TABLE "Employees" (
   "FullName"          TEXT,
@@ -63,3 +63,114 @@ SELECT "FullName", "PhoneExtension" FROM "Employees" WHERE "IsPartTime" = true;
 INSERT INTO "Employees" ("FullName", "Salary", "JobPosition", "PhoneExtension", "IsPartTime")
 VALUES ('Earl McIntosh',450,'Software Developer','0667',true);
 
+-- Add Column ParkingSpot as VARCHAR(10)
+ALTER TABLE "Employees" ADD COLUMN "ParkingSpot" VARCHAR(10);
+
+-- Create Departments table
+CREATE TABLE "Departments" (
+  "Name"                TEXT NOT NULL,
+  "BuildingNumber"      INT
+);
+
+ALTER TABLE "Departments" 
+  ADD COLUMN "Id" SERIAL PRIMARY KEY;
+
+-- Add Column DepartmentId to Employees table and make it a foreign key for Departments on Id
+ALTER TABLE "Employees" ADD COLUMN "DepartmentId" INT REFERENCES "Departments" ("Id");
+
+-- Create Products Table
+CREATE TABLE "Products" (
+  "Id"                SERIAL PRIMARY KEY,
+  "Price"             DOUBLE PRECISION,
+  "Name"              TEXT,
+  "Description"       TEXT,
+  "QuantityInStock"   INT
+);
+
+
+-- Create Orders Table
+CREATE TABLE "Orders" (
+  "Id"                SERIAL PRIMARY KEY,
+  "OrderNumber"       TEXT,
+  "DatePlaced"        TIMESTAMP,
+  "Email"             TEXT
+);
+
+-- Change the column name in departments table from Name TO DepartmentName
+ALTER TABLE "Departments" RENAME "Name" TO "DepartmentName";
+
+ALTER TABLE "Departments" RENAME "BuildingNumber" TO "Building";
+
+ALTER TABLE "Departments" ALTER COLUMN "Building" TYPE TEXT; 
+
+-- Create ProductOrders Table
+CREATE TABLE "ProductOrders" (
+  "Id"                SERIAL PRIMARY KEY,
+  "Product"           INT REFERENCES "Products" ("Id"),
+  "Order"             INT REFERENCES "Orders" ("Id"),
+  "OrderQuantity"     INT
+);
+
+-- Insert data into Departments table
+INSERT INTO "Departments" ("DepartmentName", "Building")
+VALUES ('Development','Main');
+
+
+INSERT INTO "Departments" ("DepartmentName", "Building")
+VALUES ('Marketing','North');
+
+-- Insert Employees
+INSERT INTO "Employees" ("FullName","Salary","JobPosition","PhoneExtension","IsPartTime","DepartmentId")
+VALUES ('Tim Smith', 40000, 'Programmer', '123', false, 1);
+
+INSERT INTO "Employees" ("FullName","Salary","JobPosition","PhoneExtension","IsPartTime","DepartmentId")
+VALUES ('Barbara Ramsey', 80000, 'Manager', '234', false, 1);
+
+INSERT INTO "Employees" ("FullName","Salary","JobPosition","PhoneExtension","IsPartTime","DepartmentId")
+VALUES ('Tom Jones', 32000, 'Admin', '456', true, 2);
+
+-- Insert Products
+INSERT INTO "Products" ("Price", "Name", "Description", "QuantityInStock")
+VALUES ( 12.45, 'Widget', 'The Original Widget', 100);
+
+INSERT INTO "Products" ("Price", "Name", "Description", "QuantityInStock")
+VALUES ( 99.99, 'Flowbee', 'Perfect For Haircuts', 3);
+
+-- Insert order X529
+INSERT INTO "Orders" ("OrderNumber", "DatePlaced", "Email")
+VALUES ('X529', '2020-01-01 16:55:00', 'person@example.com');
+
+SELECT * FROM "Orders";
+
+SELECT * FROM "Products";
+
+-- Add 3 Widgets to X529
+INSERT INTO "ProductOrders" ("Product", "Order", "OrderQuantity")
+VALUES ( 1, 1, 3);
+
+-- Add 2 Flowbees to X529
+INSERT INTO "ProductOrders" ("Product", "Order", "OrderQuantity")
+VALUES ( 2, 1, 2);
+
+-- Given a department id, return all employees in the department
+SELECT "FullName" FROM "Employees" WHERE "DepartmentId" = 1;
+
+-- Given a department name, return all the phone extensions
+SELECT "PhoneExtension" FROM "Employees"
+JOIN "Departments" ON "Departments"."Id" = "Employees"."DepartmentId"
+WHERE "Departments"."DepartmentName" = 'Development';
+
+-- Find all orders that contain the product id of 2
+SELECT "OrderNumber"
+FROM "Orders" 
+JOIN "ProductOrders" ON "ProductOrders"."Order" = "Orders"."Id"
+JOIN "Products" ON "Products"."Id" = "ProductOrders"."Product"
+
+DELETE FROM "ProductOrders"
+WHERE "Id" = (
+  SELECT "ProductOrders"."Id"
+  FROM "ProductOrders"
+  JOIN "Products" ON "Products"."Id" = "ProductOrders"."Product"
+  JOIN "Orders" ON "Orders"."Id" = "ProductOrders"."Order"
+  WHERE "Products"."Name" = 'Flowbee' AND "Orders"."OrderNumber" = 'X529'
+)
