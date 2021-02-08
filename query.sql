@@ -58,3 +58,8 @@ SELECT * FROM "Employees";
 
 --  Select only full name and phone extension for only part time employees
 SELECT "FullName", "PhoneExtension" FROM "Employees" WHERE "IsPartTime" = true;
+
+-- Insert a new part-time employee as a software developer with a salary of 450. Create arbitrary values for other columns.
+INSERT INTO "Employees" ("FullName", "Salary", "JobPosition", "PhoneExtension", "IsPartTime")
+VALUES ('Earl McIntosh',450,'Software Developer','0667',true);
+
